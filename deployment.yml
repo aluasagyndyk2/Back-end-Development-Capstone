@@ -1,29 +1,38 @@
 apiVersion: apps/v1
-kind: # {insert kind here}
+kind: Deployment
 metadata:
-  labels:
-    run: djangoserver
   name: djangoserver
 spec:
   replicas: 1
   selector:
     matchLabels:
       run: djangoserver
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
   template:
     metadata:
       labels:
         run: djangoserver
     spec:
       containers:
-      - image: # {insert image here}
-        imagePullPolicy: Always
-        name: djangoserver
-        ports:
-        - containerPort: # {insert port here}
-          protocol: TCP
-      restartPolicy: Always
+        - name: djangoserver
+          image: CAPSTONE_IMAGE
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SONGS_URL
+              value: SONGS_ENDPOINT
+            - name: PICTURES_URL
+              value: PICTURES_ENDPOINT
+          envFrom:
+            - secretRef:
+                name: capstone-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: djangoserver
+spec:
+  selector:
+    run: djangoserver
+  ports:
+    - port: 8080
+      targetPort: 8000
